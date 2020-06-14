@@ -146,7 +146,7 @@ func HTMLUnit(path string) ServiceOption {
 type Service struct {
 	port            int
 	addr            string
-	cmd             *exec.Cmd
+	Cmd             *exec.Cmd
 	shutdownURLPath string
 
 	display, xauthPath string
@@ -171,13 +171,13 @@ func NewSeleniumService(jarPath string, port int, opts ...ServiceOption) (*Servi
 		return nil, err
 	}
 	if s.javaPath != "" {
-		s.cmd.Path = s.javaPath
+		s.Cmd.Path = s.javaPath
 	}
 	if s.geckoDriverPath != "" {
-		s.cmd.Args = append([]string{"java", "-Dwebdriver.gecko.driver=" + s.geckoDriverPath}, s.cmd.Args[1:]...)
+		s.Cmd.Args = append([]string{"java", "-Dwebdriver.gecko.driver=" + s.geckoDriverPath}, s.Cmd.Args[1:]...)
 	}
 	if s.chromeDriverPath != "" {
-		s.cmd.Args = append([]string{"java", "-Dwebdriver.chrome.driver=" + s.chromeDriverPath}, s.cmd.Args[1:]...)
+		s.Cmd.Args = append([]string{"java", "-Dwebdriver.chrome.driver=" + s.chromeDriverPath}, s.Cmd.Args[1:]...)
 	}
 
 	var classpath []string
@@ -185,8 +185,8 @@ func NewSeleniumService(jarPath string, port int, opts ...ServiceOption) (*Servi
 		classpath = append(classpath, s.htmlUnitPath)
 	}
 	classpath = append(classpath, jarPath)
-	s.cmd.Args = append(s.cmd.Args, "-cp", strings.Join(classpath, ":"))
-	s.cmd.Args = append(s.cmd.Args, "org.openqa.grid.selenium.GridLauncherV3", "-port", strconv.Itoa(port), "-debug")
+	s.Cmd.Args = append(s.Cmd.Args, "-cp", strings.Join(classpath, ":"))
+	s.Cmd.Args = append(s.Cmd.Args, "org.openqa.grid.selenium.GridLauncherV3", "-port", strconv.Itoa(port), "-debug")
 
 	if err := s.start(port); err != nil {
 		return nil, err
@@ -242,12 +242,12 @@ func newService(cmd *exec.Cmd, urlPrefix string, port int, opts ...ServiceOption
 	if s.xauthPath != "" {
 		cmd.Env = append(cmd.Env, "XAUTHORITY="+s.xauthPath)
 	}
-	s.cmd = cmd
+	s.Cmd = cmd
 	return s, nil
 }
 
 func (s *Service) start(port int) error {
-	if err := s.cmd.Start(); err != nil {
+	if err := s.Cmd.Start(); err != nil {
 		return err
 	}
 
@@ -273,7 +273,7 @@ func (s *Service) Stop() error {
 	// Selenium 3 stopped supporting the shutdown URL by default.
 	// https://github.com/SeleniumHQ/selenium/issues/2852
 	if s.shutdownURLPath == "" {
-		if err := s.cmd.Process.Kill(); err != nil {
+		if err := s.Cmd.Process.Kill(); err != nil {
 			return err
 		}
 	} else {
@@ -283,7 +283,7 @@ func (s *Service) Stop() error {
 		}
 		resp.Body.Close()
 	}
-	if err := s.cmd.Wait(); err != nil && err.Error() != "signal: killed" {
+	if err := s.Cmd.Wait(); err != nil && err.Error() != "signal: killed" {
 		return err
 	}
 	if s.xvfb != nil {
